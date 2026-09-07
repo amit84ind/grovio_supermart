@@ -42,9 +42,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create iOS Build Directory for Swift Plugins
+      - name: Create iOS & macOS Build Directories for Swift Plugins
         run: |
           mkdir -p build/ios/SourcePackages
+          mkdir -p build/macos/SourcePackages
 
       - name: Get Dependencies
         run: flutter pub get
