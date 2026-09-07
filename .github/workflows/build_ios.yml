@@ -59,6 +59,10 @@ jobs:
       - name: Precache iOS Artifacts
         run: flutter precache --ios
 
+      - name: Generate iOS Xcode Configurations
+        run: |
+          flutter build ios --release --no-codesign -t ${{ matrix.app.entry }} --config-only
+
       - name: Install CocoaPods
         run: |
           cd ios
