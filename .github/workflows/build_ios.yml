@@ -68,8 +68,8 @@ jobs:
           xcodebuild -workspace ios/Runner.xcworkspace \
                      -scheme Runner \
                      -configuration Release \
-                     -sdk iphoneos \
-                     -derivedDataPath build/ios_output \
+                     -destination 'generic/platform=iOS' \
+                     -derivedDataPath build/DerivedData \
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGN_IDENTITY="" \
@@ -77,10 +77,16 @@ jobs:
                      FLUTTER_TARGET=${{ matrix.app.entry }} \
                      build
 
-      - name: Package iOS IPA & App Zip
+      - name: Package Unsigned .ipa & App Zip
         run: |
           mkdir -p output/Payload
-          cp -r build/ios_output/Build/Products/Release-iphoneos/Runner.app output/Payload/
+          APP_PATH=$(find build/DerivedData -name "Runner.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: Runner.app not found!"
+            exit 1
+          fi
+          echo "Found app at: $APP_PATH"
+          cp -R "$APP_PATH" output/Payload/
           cd output
           zip -r ${{ matrix.app.filename }}_iOS.ipa Payload
           zip -r ${{ matrix.app.filename }}_Runner.app.zip Payload/Runner.app
