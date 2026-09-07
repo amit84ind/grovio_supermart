@@ -1,0 +1,105 @@
+{
+  "project_info": {
+    "project_number": "1079422321860",
+    "project_id": "grovio-supermart-71e57",
+    "storage_bucket": "grovio-supermart-71e57.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079422321860:android:02f085a6b6e2a98df43591",
+        "android_client_info": {
+          "package_name": "com.example.grovio_supermart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbdexNk3FXUpJ8TwbrzNcdQOVynrY6cfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079422321860:android:91ec620242c02cdbf43591",
+        "android_client_info": {
+          "package_name": "com.example.grovio_supermart.driver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbdexNk3FXUpJ8TwbrzNcdQOVynrY6cfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079422321860:android:4244170c3c910246f43591",
+        "android_client_info": {
+          "package_name": "com.example.grovio_supermart.store"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbdexNk3FXUpJ8TwbrzNcdQOVynrY6cfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079422321860:android:3c95573b889768eff43591",
+        "android_client_info": {
+          "package_name": "com.example.grovio_supermart_kuwasi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbdexNk3FXUpJ8TwbrzNcdQOVynrY6cfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079422321860:android:d0ee48821b81a8f5f43591",
+        "android_client_info": {
+          "package_name": "com.kuwasi.grovio_supermart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbdexNk3FXUpJ8TwbrzNcdQOVynrY6cfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
