@@ -58,7 +58,7 @@ jobs:
       - name: Install CocoaPods
         run: |
           cd ios
-          pod install
+          pod install --repo-update
 
       - name: Build iOS App (${{ matrix.app.name }})
         run: |
