@@ -59,14 +59,28 @@ jobs:
       - name: Precache iOS Artifacts
         run: flutter precache --ios
 
-      - name: Build iOS App (${{ matrix.app.name }})
+      - name: Build iOS App via Xcode (${{ matrix.app.name }})
         run: |
-          flutter build ios --release --no-codesign -t ${{ matrix.app.entry }}
+          flutter build ios --release --no-codesign -t ${{ matrix.app.entry }} --config-only
+          cd ios
+          pod install
+          cd ..
+          xcodebuild -workspace ios/Runner.xcworkspace \
+                     -scheme Runner \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     -derivedDataPath build/ios_output \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     PROVISIONING_PROFILE_SPECIFIER="" \
+                     FLUTTER_TARGET=${{ matrix.app.entry }} \
+                     build
 
       - name: Package iOS IPA & App Zip
         run: |
           mkdir -p output/Payload
-          cp -r build/ios/iphoneos/Runner.app output/Payload/
+          cp -r build/ios_output/Build/Products/Release-iphoneos/Runner.app output/Payload/
           cd output
           zip -r ${{ matrix.app.filename }}_iOS.ipa Payload
           zip -r ${{ matrix.app.filename }}_Runner.app.zip Payload/Runner.app
