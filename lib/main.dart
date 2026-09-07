@@ -385,7 +385,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         _lat = position.latitude;
         _lng = position.longitude;
         try {
-          List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(
+          List<Placemark> placemarks = await placemarkFromCoordinates(
             position.latitude,
             position.longitude,
           );
@@ -1917,11 +1917,11 @@ class _MyProfilePageState extends State<MyProfilePage> {
       if (!kIsWeb) {
         try {
           String searchQuery = "${areaController.text}, Amethi, Uttar Pradesh";
-          List<Location> locations = await Geocoding().locationFromAddress(searchQuery);
+          List<Location> locations = await locationFromAddress(searchQuery);
           if (locations.isNotEmpty) {
             lat = locations[0].latitude;
             lng = locations[0].longitude;
-            List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(lat, lng);
+            List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
             if (placemarks.isNotEmpty) pincode = placemarks[0].postalCode ?? "";
           }
         } catch (e) {

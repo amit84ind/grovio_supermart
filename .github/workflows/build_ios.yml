@@ -42,8 +42,9 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Disable macOS Desktop & Create Build Directories
+      - name: Disable SPM & macOS Desktop
         run: |
+          flutter config --no-enable-swift-package-manager
           flutter config --no-enable-macos-desktop
           mkdir -p build/ios/SourcePackages/cloud_firestore-6.9.0
           mkdir -p build/macos/SourcePackages/cloud_firestore-6.9.0
@@ -53,10 +54,6 @@ jobs:
 
       - name: Precache iOS Artifacts
         run: flutter precache --ios
-
-      - name: Generate iOS Xcode Configurations
-        run: |
-          flutter build ios --release --no-codesign -t ${{ matrix.app.entry }} --config-only
 
       - name: Install CocoaPods
         run: |
