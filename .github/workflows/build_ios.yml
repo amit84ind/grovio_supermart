@@ -42,14 +42,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create iOS & macOS Build Directories for Swift Plugins
+      - name: Disable macOS Desktop & Create Build Directories
         run: |
-          mkdir -p build/ios/SourcePackages
-          mkdir -p build/macos/SourcePackages
-          for pkg in cloud_firestore-6.9.0 firebase_core-4.14.0 firebase_storage-13.5.0 firebase_messaging-16.6.0; do
-            mkdir -p "build/ios/SourcePackages/$pkg"
-            mkdir -p "build/macos/SourcePackages/$pkg"
-          done
+          flutter config --no-enable-macos-desktop
+          mkdir -p build/ios/SourcePackages/cloud_firestore-6.9.0
+          mkdir -p build/macos/SourcePackages/cloud_firestore-6.9.0
 
       - name: Get Dependencies
         run: flutter pub get
