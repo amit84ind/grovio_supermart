@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Grovio Customer App (iOS / Android)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Grovio Store App (iOS / Android)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_store.dart"
+    },
+    {
+      "name": "Grovio Driver App (iOS / Android)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_driver.dart"
+    },
+    {
+      "name": "Grovio Web Dashboard",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_web_dashboard.dart"
+    }
+  ]
+}
