@@ -690,7 +690,7 @@ class _SystemPulseTab extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: recent.length,
-      separatorBuilder: (_, _) => const Divider(height: 24),
+      separatorBuilder: (_, __) => const Divider(height: 24),
       itemBuilder: (context, i) => ListTile(
         contentPadding: EdgeInsets.zero,
         leading: CircleAvatar(

@@ -479,7 +479,7 @@ class _BillingPageState extends State<BillingPage> {
                           items[i].imageUrl,
                           width: 40,
                           cacheWidth: 100,
-                          errorBuilder: (_, _, _) => const Icon(Icons.image),
+                          errorBuilder: (_, __, ___) => const Icon(Icons.image),
                         ),
                         title: Text(items[i].name),
                         subtitle: Text("Rs ${items[i].price}"),
