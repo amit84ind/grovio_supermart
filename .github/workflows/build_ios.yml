@@ -46,6 +46,10 @@ jobs:
         run: |
           mkdir -p build/ios/SourcePackages
           mkdir -p build/macos/SourcePackages
+          for pkg in cloud_firestore-6.9.0 firebase_core-4.14.0 firebase_storage-13.5.0 firebase_messaging-16.6.0; do
+            mkdir -p "build/ios/SourcePackages/$pkg"
+            mkdir -p "build/macos/SourcePackages/$pkg"
+          done
 
       - name: Get Dependencies
         run: flutter pub get
