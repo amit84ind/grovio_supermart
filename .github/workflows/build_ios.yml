@@ -1,4 +1,4 @@
-name: Build Grovio Apps (iOS & Android)
+name: Build Grovio iOS Apps (iPhone)
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-all-apps:
-    name: Build ${{ matrix.app.name }} (${{ matrix.target-os }})
+  build-ios-apps:
+    name: Build ${{ matrix.app.name }} (iOS)
     runs-on: macos-14
     strategy:
       fail-fast: false
@@ -17,17 +17,13 @@ jobs:
         app:
           - name: "Grovio Customer App"
             entry: "lib/main.dart"
-            flavor: "customer"
             filename: "Grovio_Customer"
           - name: "Grovio Store App"
             entry: "lib/main_store.dart"
-            flavor: "store"
             filename: "Grovio_Store"
           - name: "Grovio Driver App"
             entry: "lib/main_driver.dart"
-            flavor: "driver"
             filename: "Grovio_Driver"
-        target-os: [iOS, Android]
 
     steps:
       - name: Checkout Code
@@ -42,34 +38,30 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.47.2'
           channel: 'stable'
           cache: true
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Precache Artifacts
-        run: flutter precache --ios --android
+      - name: Precache iOS Artifacts
+        run: flutter precache --ios
 
-      # --- iOS BUILD STEPS ---
       - name: Generate iOS Xcode Configurations
-        if: matrix.target-os == 'iOS'
         run: |
           flutter build ios --release --no-codesign -t ${{ matrix.app.entry }} --config-only
 
       - name: Install CocoaPods
-        if: matrix.target-os == 'iOS'
         run: |
           cd ios
           pod install
 
       - name: Build iOS App (${{ matrix.app.name }})
-        if: matrix.target-os == 'iOS'
         run: |
           flutter build ios --release --no-codesign -t ${{ matrix.app.entry }}
 
       - name: Package iOS IPA & App Zip
-        if: matrix.target-os == 'iOS'
         run: |
           mkdir -p output/Payload
           cp -r build/ios/iphoneos/Runner.app output/Payload/
@@ -79,25 +71,10 @@ jobs:
           cd ..
 
       - name: Upload iOS Artifacts
-        if: matrix.target-os == 'iOS'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.app.name }} (iOS)
           path: |
             output/${{ matrix.app.filename }}_iOS.ipa
             output/${{ matrix.app.filename }}_Runner.app.zip
-          retention-days: 30
-
-      # --- ANDROID BUILD STEPS ---
-      - name: Build Android APK (${{ matrix.app.name }})
-        if: matrix.target-os == 'Android'
-        run: |
-          flutter build apk --release --flavor ${{ matrix.app.flavor }} -t ${{ matrix.app.entry }}
-
-      - name: Upload Android Artifacts
-        if: matrix.target-os == 'Android'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.app.name }} (Android APK)
-          path: build/app/outputs/flutter-apk/app-${{ matrix.app.flavor }}-release.apk
           retention-days: 30
