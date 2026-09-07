@@ -1,4 +1,4 @@
-name: Build iOS App (iPhone)
+name: Build Grovio Apps (iOS & Android)
 
 on:
   push:
@@ -8,9 +8,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-ios:
-    name: Build iOS Runner & IPA
+  build-all-apps:
+    name: Build ${{ matrix.app.name }} (${{ matrix.target-os }})
     runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - name: "Grovio Customer App"
+            entry: "lib/main.dart"
+            flavor: "customer"
+            filename: "Grovio_Customer"
+          - name: "Grovio Store App"
+            entry: "lib/main_store.dart"
+            flavor: "store"
+            filename: "Grovio_Store"
+          - name: "Grovio Driver App"
+            entry: "lib/main_driver.dart"
+            flavor: "driver"
+            filename: "Grovio_Driver"
+        target-os: [iOS, Android]
 
     steps:
       - name: Checkout Code
@@ -32,28 +49,47 @@ jobs:
         run: flutter pub get
 
       - name: Install CocoaPods
+        if: matrix.target-os == 'iOS'
         run: |
           cd ios
           pod install --repo-update
 
-      - name: Build iOS App (Release, Unsigned)
+      # --- iOS BUILD STEP ---
+      - name: Build iOS App (${{ matrix.app.name }})
+        if: matrix.target-os == 'iOS'
         run: |
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign -t ${{ matrix.app.entry }}
 
-      - name: Package IPA for Sideloading (AltStore / Sideloadly / LiveContainer)
+      - name: Package iOS IPA & App Zip
+        if: matrix.target-os == 'iOS'
         run: |
           mkdir -p output/Payload
           cp -r build/ios/iphoneos/Runner.app output/Payload/
           cd output
-          zip -r Grovio_SuperMart_iOS.ipa Payload
-          zip -r Grovio_SuperMart_Runner.app.zip Payload/Runner.app
+          zip -r ${{ matrix.app.filename }}_iOS.ipa Payload
+          zip -r ${{ matrix.app.filename }}_Runner.app.zip Payload/Runner.app
           cd ..
 
-      - name: Upload iOS Build Artifacts
+      - name: Upload iOS Artifacts
+        if: matrix.target-os == 'iOS'
         uses: actions/upload-artifact@v4
         with:
-          name: Grovio-SuperMart-iOS-App
+          name: ${{ matrix.app.name }} (iOS)
           path: |
-            output/Grovio_SuperMart_iOS.ipa
-            output/Grovio_SuperMart_Runner.app.zip
+            output/${{ matrix.app.filename }}_iOS.ipa
+            output/${{ matrix.app.filename }}_Runner.app.zip
+          retention-days: 30
+
+      # --- ANDROID BUILD STEP ---
+      - name: Build Android APK (${{ matrix.app.name }})
+        if: matrix.target-os == 'Android'
+        run: |
+          flutter build apk --release --flavor ${{ matrix.app.flavor }} -t ${{ matrix.app.entry }}
+
+      - name: Upload Android Artifacts
+        if: matrix.target-os == 'Android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app.name }} (Android APK)
+          path: build/app/outputs/flutter-apk/app-${{ matrix.app.flavor }}-release.apk
           retention-days: 30
