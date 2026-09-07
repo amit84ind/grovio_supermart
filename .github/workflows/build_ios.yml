@@ -45,16 +45,25 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Precache Artifacts
+        run: |
+          flutter precache --ios --android
+
       - name: Get Dependencies
         run: flutter pub get
+
+      # --- iOS BUILD STEPS ---
+      - name: Generate iOS Xcode Configurations
+        if: matrix.target-os == 'iOS'
+        run: |
+          flutter build ios --release --no-codesign -t ${{ matrix.app.entry }} --config-only
 
       - name: Install CocoaPods
         if: matrix.target-os == 'iOS'
         run: |
           cd ios
-          pod install --repo-update
+          pod install
 
-      # --- iOS BUILD STEP ---
       - name: Build iOS App (${{ matrix.app.name }})
         if: matrix.target-os == 'iOS'
         run: |
@@ -80,7 +89,7 @@ jobs:
             output/${{ matrix.app.filename }}_Runner.app.zip
           retention-days: 30
 
-      # --- ANDROID BUILD STEP ---
+      # --- ANDROID BUILD STEPS ---
       - name: Build Android APK (${{ matrix.app.name }})
         if: matrix.target-os == 'Android'
         run: |
