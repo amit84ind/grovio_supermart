@@ -16,6 +16,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import 'dart:math';
 import 'grovio_shared.dart';
 import 'admin_uploader.dart';
 
@@ -23,9 +24,41 @@ import 'admin_uploader.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'store_orders_channel',
+  'New Store Orders',
+  description: 'Notifications for new grocery orders in Grovio Store',
+  importance: Importance.max,
+  playSound: true,
+);
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  RemoteNotification? notification = message.notification;
+  if (notification != null) {
+    flutterLocalNotificationsPlugin.show(
+      id: notification.hashCode,
+      title: notification.title ?? "New Order Received! 🛒",
+      body: notification.body ?? "Check Grovio Store app for details",
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'store_orders_channel',
+          'New Store Orders',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/launcher_icon',
+          playSound: true,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: 'default',
+        ),
+      ),
+    );
+  }
 }
 
 void main() async {
@@ -37,13 +70,32 @@ void main() async {
     }
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
+    const DarwinInitializationSettings initializationSettingsDarwin =
+        DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
     const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsDarwin,
+      macOS: initializationSettingsDarwin,
+    );
+
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
     );
+
+    // Create high-importance notification channel on Android
+    final androidPlugin = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(channel);
+    }
   } catch (e) {
-    debugPrint("Firebase init failed: $e");
+    debugPrint("Firebase/Notification init failed: $e");
   }
   runApp(const GrovioStoreApp());
 }
@@ -109,7 +161,6 @@ class _StoreDashboardState extends State<StoreDashboard>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused) {
-      // Memory Optimization: Clear image cache when app goes to background
       PaintingBinding.instance.imageCache.clear();
       PaintingBinding.instance.imageCache.clearLiveImages();
       debugPrint("Memory: Image cache cleared (Background)");
@@ -117,29 +168,82 @@ class _StoreDashboardState extends State<StoreDashboard>
   }
 
   void _setupNotifications() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(alert: true, badge: true, sound: true);
-    await messaging.subscribeToTopic('store_orders');
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-      if (notification != null && android != null) {
-        flutterLocalNotificationsPlugin.show(
-          id: notification.hashCode,
-          title: notification.title,
-          body: notification.body,
-          notificationDetails: const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'high_importance_channel',
-              'High Importance Notifications',
-              importance: Importance.max,
-              priority: Priority.high,
-              icon: '@mipmap/launcher_icon',
-            ),
-          ),
-        );
-      }
-    });
+    if (kIsWeb) return;
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+      NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+      debugPrint("FCM Permission status: ${settings.authorizationStatus}");
+
+      await messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      await messaging.subscribeToTopic('store_orders');
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        RemoteNotification? notification = message.notification;
+        if (notification != null) {
+          _showLocalOrderNotification(
+            title: notification.title ?? "New Order Received! 🛒",
+            body: notification.body ?? "A new order has been placed.",
+          );
+        }
+      });
+
+      // Realtime Firestore Listener for new orders
+      Set<String> knownOrderIds = {};
+      bool isFirstLoad = true;
+      GrovioFirestore.getOrders().listen((orders) {
+        final newPlacedOrders = orders.where((o) => o.status == "PLACED").toList();
+        if (isFirstLoad) {
+          knownOrderIds = newPlacedOrders.map((o) => o.id).toSet();
+          isFirstLoad = false;
+        } else {
+          for (var order in newPlacedOrders) {
+            if (!knownOrderIds.contains(order.id)) {
+              knownOrderIds.add(order.id);
+              _showLocalOrderNotification(
+                title: "New Order Placed! 🛒",
+                body: "Order #${order.id.substring(0, min(6, order.id.length))} - Rs ${order.total.toStringAsFixed(0)} (${order.customerName})",
+              );
+            }
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint("Notification setup error: $e");
+    }
+  }
+
+  void _showLocalOrderNotification({required String title, required String body}) {
+    flutterLocalNotificationsPlugin.show(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'store_orders_channel',
+          'New Store Orders',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/launcher_icon',
+          playSound: true,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: 'default',
+        ),
+      ),
+    );
   }
 
   @override
