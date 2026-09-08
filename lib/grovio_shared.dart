@@ -16,20 +16,31 @@ class GrovioConfig {
   static const String storeUpiId = "70684879@axl";
   static const String storeName = "Abhishek Singh";
 
-  static const FirebaseOptions webOptions = FirebaseOptions(
+  static const FirebaseOptions firebaseOptions = FirebaseOptions(
     apiKey: "AIzaSyAbdexNk3FXUpJ8TwbrzNcdQOVynrY6cfA",
     authDomain: "grovio-supermart-71e57.firebaseapp.com",
     projectId: "grovio-supermart-71e57",
     storageBucket: "grovio-supermart-71e57.firebasestorage.app",
     messagingSenderId: "1079422321860",
-    appId: "1:1079422321860:web:d8e1f4c00d8743f5932454",
+    appId: "1:1079422321860:ios:d8e1f4c00d8743f5932454",
   );
 
   static Future<FirebaseApp> initFirebase() async {
-    if (kIsWeb) {
-      return await Firebase.initializeApp(options: webOptions);
-    } else {
-      return await Firebase.initializeApp();
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        return Firebase.app();
+      }
+      if (kIsWeb || defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+        return await Firebase.initializeApp(options: firebaseOptions);
+      } else {
+        return await Firebase.initializeApp();
+      }
+    } catch (e) {
+      debugPrint("Firebase init error: $e");
+      if (Firebase.apps.isNotEmpty) {
+        return Firebase.app();
+      }
+      return await Firebase.initializeApp(options: firebaseOptions);
     }
   }
 }
