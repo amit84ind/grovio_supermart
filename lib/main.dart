@@ -326,8 +326,9 @@ class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();
-  static const double shopLat = 26.490639;
-  static const double shopLng = 81.805222;
+  static const double shopLat = 26.490556;
+  static const double shopLng = 81.805194;
+  static const double maxDeliveryRadiusKm = 50.0;
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
@@ -355,6 +356,20 @@ class _RegistrationPageState extends State<RegistrationPage> {
               accuracy: LocationAccuracy.medium,
             ),
           );
+          double distMeters = Geolocator.distanceBetween(
+            RegistrationPage.shopLat,
+            RegistrationPage.shopLng,
+            position.latitude,
+            position.longitude,
+          );
+          double distKm = distMeters / 1000.0;
+          if (distKm > RegistrationPage.maxDeliveryRadiusKm) {
+            _lat = null;
+            _lng = null;
+            setState(() => _addressController.clear());
+            _showAreaRestrictionDialog(distKm);
+            return;
+          }
           _lat = position.latitude;
           _lng = position.longitude;
           setState(() {
@@ -382,6 +397,24 @@ class _RegistrationPageState extends State<RegistrationPage> {
             accuracy: LocationAccuracy.high,
           ),
         );
+
+        // 50km Area Restriction Check from 26°29'26.0"N 81°48'18.7"E
+        double distMeters = Geolocator.distanceBetween(
+          RegistrationPage.shopLat,
+          RegistrationPage.shopLng,
+          position.latitude,
+          position.longitude,
+        );
+        double distKm = distMeters / 1000.0;
+
+        if (distKm > RegistrationPage.maxDeliveryRadiusKm) {
+          _lat = null;
+          _lng = null;
+          setState(() => _addressController.clear());
+          _showAreaRestrictionDialog(distKm);
+          return;
+        }
+
         _lat = position.latitude;
         _lng = position.longitude;
         try {
@@ -415,6 +448,38 @@ class _RegistrationPageState extends State<RegistrationPage> {
       }
     } finally {
       setState(() => _isLoadingLocation = false);
+    }
+  }
+
+  void _showAreaRestrictionDialog(double distKm) {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.location_off, color: Colors.red),
+              SizedBox(width: 8),
+              Text("Out of Service Area"),
+            ],
+          ),
+          content: Text(
+            "Grovio SuperMart delivers within a 50 km radius of our store.\n\nYour current location is ${distKm.toStringAsFixed(1)} km away. Delivery is not available in your area.",
+            style: const TextStyle(fontSize: 14),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GrovioColors.primaryGreen,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(c),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
     }
   }
 
